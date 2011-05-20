@@ -1,0 +1,70 @@
+<project name="AudioTagger" default="dist-mac" basedir=".">
+	<description>AudioTagger Ant Tasks zur Erstellung einer Distribution</description>
+	
+	<property name="itsme" value="Manuel Alabor" />
+	<property name="src.dir" location="src" />
+	<property name="jarname" value="AudioTagger.jar" />
+	<property name="appname" value="AudioTagger" />
+	<property name="lib.dir" location="lib" />
+	<property name="dist.dir" location="dist" />
+	<path id="project.classpath">
+		<fileset dir="${lib.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+	<property name="keystore.file" location="../.keystore" />
+	<property name="keystore.alias" value="manu" />
+	<property name="manifest.file" location="MANIFEST.MF" />
+	
+	
+	<!-- Aufräumen -->
+	<target name="clean" description="Vorherige Distributionen löschen">
+		<delete dir="${dist.dir}" />
+	</target>
+	
+	<!-- Vorbereiten -->
+	<target name="init" depends="clean" description="Vorbereiten">
+		<mkdir dir="${dist.dir}" />
+	</target>
+	
+	<!-- Kompilieren -->
+	<target name="compile" depends="init" description="Kompilieren" >
+        <fatjar.build output="${dist.dir}/${jarname}">
+            <fatjar.manifest mainclass="ch.hsr.audiotagger.AudioTaggerApplication"/>
+            <fatjar.filesource path="/Users/manuelalabor/Eclipse Workspace/AudioTagger/bin" relpath=""/>
+            <fatjar.jarsource file="/Users/manuelalabor/Eclipse Workspace/AudioTagger/lib/commons-codec-1.4.jar" relpath=""/>
+            <fatjar.jarsource file="/Users/manuelalabor/Eclipse Workspace/AudioTagger/lib/jaudiotagger.jar" relpath=""/>
+            <fatjar.jarsource file="/Users/manuelalabor/Eclipse Workspace/AudioTagger/lib/looks-2.3.0.jar" relpath=""/>
+            <fatjar.jarsource file="/Users/manuelalabor/Eclipse Workspace/AudioTagger/lib/mac_widgets-0.9.5.jar" relpath=""/>
+            <fatjar.jarsource file="/Users/manuelalabor/Eclipse Workspace/AudioTagger/lib/forms-1.2.1.jar" relpath=""/>
+        </fatjar.build>
+	</target>
+	
+	<!-- Erstellt ein .app für Mac OSX -->
+	<target name="dist-mac" depends="compile" description=".app-Bundle für OSX erstellen" >
+		<taskdef name="jarbundler" classname="net.sourceforge.jarbundler.JarBundler" />
+		
+		<jarbundler dir="dist"
+		            name="AudioTagger"
+		            mainclass="ch.hsr.audiotagger.AudioTaggerApplication" 
+		            jar="${dist.dir}/${jarname}"
+					jvmversion="1.6+"
+					icon="trompete.icns">
+			<javaproperty name="apple.laf.useScreenMenuBar" value="true"/>
+			<javaproperty name="apple.awt.brushMetal" value="true"/>
+			<javaproperty name="apple.awt.showGrowBox" value="true"/>
+		</jarbundler>
+
+	</target>
+	
+	<!-- JAR's signieren -->
+	<target name="sign" depends="dist-mac">
+		<input message="Enter keystore password" addproperty="keystorepwd" />
+		<signjar keystore="${keystore.file}" alias="${keystore.alias}" storepass="${keystorepwd}" preservelastmodified="true">
+			<path>
+				<fileset dir="${dist.dir}" includes="**/*.jar" />
+			</path>
+		</signjar>
+	</target>
+
+</project>
